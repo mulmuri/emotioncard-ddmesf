@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <?xml version="1.0" encoding="iso-8859-1"?>
+    <title> 🎶 대화가 필요해 🎶 - 온라인 ZOOM 토크</title>
+    <meta name="viewport" content="width=device-width, initial-scale=0.55">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+
+    <style> @import url('https://fonts.googleapis.com/css2?family=Gamja+Flower&display=swap');
+
+    * {
+        padding: 0;
+        margin: 0;
+    }
+
+    body {
+        background-color: #f6ebe1;
+        padding-top: 50px;
+    }
+
+    .content {
+        max-width: 1200px;
+        margin: 0 auto;
+        margin-top: 30px;
+    }
+
+    .flex-container {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0em;
+        margin: 0 auto;
+        justify-content: center;
+    }
+
+    .flex-item {
+        width: 120px;
+        height: 170px;
+        flex-grow: 0;
+        border-radius: 5px;
+    }
+
+    .flex-item:hover {
+        background-color: #D3D3D3;
+        cursor: pointer;
+    }
+
+    .card-box {
+        position: relative;
+        width: 100px;
+        height: 150px;
+        margin: 10px;
+    }
+
+    .card-box > * {
+        position: absolute;
+    }
+
+    .card-name {
+        width: 100%;
+        top: 10%;
+        font-size: 15px;
+        font-family: 'Gamja Flower', cursive;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .card-emoticon {
+        width: 80px;
+        height: 80px;
+        top: 55px;
+        left: 10px;
+    }
+
+    .card {
+        width: 85%;
+        margin: 0 auto;
+    }
+    .card-body {
+        margin: 0 auto;
+    }
+
+    .stamp {
+        width: 150px;
+        height: 150px;
+        left: -25px;
+        top: 20px;
+    }
+
+    .resetButton:hover {
+        cursor:pointer;
+    }
+
+    </style>
+
+</head>
+<body>
+    <div class="card">
+        <div class="card-body">
+            <% for (var i=1; i<=5; i++) { %>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="inlineRadioOptions" value="option1" onclick="checkRadio(<%= i %>)">
+                    <label class="form-check-label radio-color" for="inlineRadio1"></label>
+                </div>
+            <% } %>
+            <input class="username" type="text" placeholder="이름" size="16" maxlength="12" onkeyup="keyevent(this.value)">
+            <text class="radio-color resetButton" onclick="cardResetEvent()"></text>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="flex-container">
+
+        <% for (var i=1; i<=55; i++) { %>
+            <div class="flex-item" onclick="cardSelectAjaxEvent(<%=i%>)">
+                <div class="card-box">
+                    <svg viewBox="0 0 100 150" fill="<%=cardColor[i]%>">
+                        <rect x="0" y="0" width="100%" height="100%" rx="5" ry="5"/>
+                        <rect x="15" y="9" width="70%" height="20%" rx="10" ry="10" fill="white"/>
+                    </svg>
+                    <div class="card-name"><%= emotionList[i] %></div>
+                    <img class="card-emoticon" src="emoticonNo<%=i%>.png">
+
+                    <svg class="stamp" viewBox="0 0 100 100" transform="rotate(-20)">
+                        <ellipse x="0" y="0" width="100%" height="100%" cx="50" cy="50" rx="40" ry="20"
+                        style="stroke:none; stroke-width: 3px; fill:none"
+                        />
+                        <text x="25" y="55"
+                        style="fill: none" font-size="20" font-family="Gamja Flower, cursive">
+                        </text>
+                    </svg>
+
+                </div>
+            </div>
+        <% } %>
+
+        </div>
+    </section>
+
+    <script>
+
+    function updateCard(cardNum, actionType, actionUser, username) {
+        var target = document.getElementsByClassName('stamp')[cardNum-1];
+        target.style.visibility = (actionType == 1) ? "visible" : "hidden";
+        target.childNodes[1].style.stroke = userColor[actionUser];
+        target.childNodes[3].style.fill = userColor[actionUser];
+        target.childNodes[3].innerHTML = username;
+    };
+
+    function syncAjaxEvent(timestamp) {
+        var data = {
+            'roomNum': roomNum,
+            'timestamp': timestamp
+        };
+        data = JSON.stringify(data);
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'syncRequest');
+        xhr.setRequestHeader('Content-type', "application/json");
+        xhr.send(data);
+
+        xhr.addEventListener('load', function() {
+            var res = JSON.parse(xhr.responseText);
+            for (var item of res.updateList)
+                updateCard(item.cardNum, item.actionType, item.actionUser, item.username);
+            syncAjaxEvent(res.timestamp);
+        });
+    };
+
+    function cardSelectAjaxEvent(cardNum) {
+        if (actionUser == undefined) {
+            alert("색을 선택해주세요.");
+            return;
+        }
+        if (username == undefined || username == '') {
+            alert("이름을 입력해주세요.");
+            return;
+        }
+
+        var data = {
+            "roomNum": roomNum,
+            "cardNum": cardNum,
+            "actionUser": actionUser,
+            "username": username
+        };
+        data = JSON.stringify(data);
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'selectCardRequest');
+        xhr.setRequestHeader('Content-type', "application/json");
+        xhr.send(data);
+
+        xhr.addEventListener('load', function() {
+            var res = JSON.parse(xhr.responseText);
+            if (res.operate == true)
+                updateCard(cardNum, res.actionType, actionUser, username);
+        });
+    };
+
+    function cardResetEvent() {
+        var data = {
+            'roomNum': roomNum,
+        };
+        data = JSON.stringify(data);
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'cardResetRequest');
+        xhr.setRequestHeader('Content-type', "application/json");
+        xhr.send(data);
+    }
+
+    </script>
+
+    <script>
+    var roomNum = <%= roomNum %> ;
+
+    var colorLable = ["%F0%9F%9F%A5", "%F0%9F%9F%A7", "%F0%9F%9F%A8", "%F0%9F%9F%A9", "%F0%9F%9F%A6", "%F0%9F%94%84"];
+    for (var i=0; i<=5; i++)
+        document.getElementsByClassName('radio-color')[i].innerHTML = decodeURI(colorLable[i]);
+
+    var userColor = [null, "red", 'orange', 'yellow', 'green', 'blue'];
+
+    var cardState = "<%= JSON.stringify(cardState) %>";
+    cardState = cardState.replaceAll('&#34;', '\"');
+    cardState = JSON.parse(cardState);
+
+    for (var i=1; i<=55; i++) {
+        if (cardState[i].cardType == 1) {
+            updateCard(i, 1, cardState[i].cardOwner, cardState[i].username);
+        }
+    }
+
+    var actionUser;
+    function checkRadio(idx) {
+        actionUser = idx;
+    }
+
+    var username;
+    function keyevent(name) {
+        username = name;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        syncAjaxEvent(<%= timestamp %>);
+    });
+    </script>
+
+</body>
+</html>
