@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <?xml version="1.0" encoding="iso-8859-1"?>
-    <title> 🎶 대화가 필요해 🎶 - 온라인 ZOOM 토크</title>
+    <title> 온라인 감정나눔카드 </title>
     <meta name="viewport" content="width=device-width, initial-scale=0.55">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
@@ -151,7 +151,7 @@
 
     function syncAjaxEvent(timestamp) {
         var data = {
-            'roomNum': roomNum,
+            'roomId': roomId,
             'timestamp': timestamp
         };
         data = JSON.stringify(data);
@@ -180,7 +180,7 @@
         }
 
         var data = {
-            "roomNum": roomNum,
+            "roomId": roomId,
             "cardNum": cardNum,
             "actionUser": actionUser,
             "username": username
@@ -201,7 +201,7 @@
 
     function cardResetEvent() {
         var data = {
-            'roomNum': roomNum,
+            'roomId': roomId,
         };
         data = JSON.stringify(data);
 
@@ -214,7 +214,7 @@
     </script>
 
     <script>
-    var roomNum = <%= roomNum %> ;
+    var roomId = <%= roomId %> ;
 
     var colorLable = ["%F0%9F%9F%A5", "%F0%9F%9F%A7", "%F0%9F%9F%A8", "%F0%9F%9F%A9", "%F0%9F%9F%A6", "%F0%9F%94%84"];
     for (var i=0; i<=5; i++)

@@ -30,18 +30,18 @@ function Room() {
     };
     this.eventQueue = [];
 
-    this.syncCallback = function(req, res, timestamp, roomNum, count) {
-        newTimestamp = room[roomNum].eventQueue.length;
+    this.syncCallback = function(req, res, timestamp, roomId, count) {
+        newTimestamp = room[roomId].eventQueue.length;
         if (newTimestamp != timestamp || count == 0) {
             var updateList = new Array(newTimestamp - timestamp);
             for (var i=0; i< updateList.length; i++)
-                updateList[i] = room[roomNum].eventQueue[i+timestamp];
+                updateList[i] = room[roomId].eventQueue[i+timestamp];
 
             req.body.timestamp = newTimestamp;
             req.body.updateList = updateList;
             res.send(req.body);
         } else {
-            setTimeout(room[roomNum].syncCallback, 100, req, res, timestamp, roomNum, count-1);
+            setTimeout(room[roomId].syncCallback, 100, req, res, timestamp, roomId, count-1);
         }
     }
 
@@ -96,11 +96,11 @@ var room = [];
 
 
 app.post('/syncRequest', function(req, res) {
-    room[req.body.roomNum].syncCallback(req, res, req.body.timestamp, req.body.roomNum, 250);
+    room[req.body.roomId].syncCallback(req, res, req.body.timestamp, req.body.roomId, 250);
 });
 
 app.post('/selectCardRequest', function(req, res) {
-    var result = room[req.body.roomNum].selectCard(req.body.cardNum, req.body.actionUser, req.body.username);
+    var result = room[req.body.roomId].selectCard(req.body.cardNum, req.body.actionUser, req.body.username);
 
     if (result == 1 || result == 0) {
         req.body.operate = true;
@@ -114,34 +114,46 @@ app.post('/selectCardRequest', function(req, res) {
 });
 
 app.post('/cardResetRequest', function(req, res) {
-    room[req.body.roomNum].resetCard();
+    room[req.body.roomId].resetCard();
 });
 
 
-app.get('/getRoom', function(req, res) {
-    res.render('main');
+app.post('/makeRoom', function(req, res) {
+    var roomId = Math.floor(Math.random() * 9000) + 1000;
+    room[roomId] = new Room();
+    res.redirect('room?id='+roomId);
 });
+
+app.post('/enterRoom', function(req, res) {
+    var roomId = req.body.roomId;
+    res.redirect('room?id='+roomId);    
+})
 
 
 app.get('/main', function(req, res) {
     res.render('main');
 });
 
+app.get('/maintest', function(req, res) {
+    res.render('main');
+});
+
 app.get('/room', function(req, res) {
-    var roomNum = req.query.id;
-    if (room[roomNum] == undefined) {
-        room[roomNum] = new Room();
+    var roomId = req.query.id;
+    if (room[roomId] == undefined) {
+        res.status(404).send('Error');
+        room[roomId] = new Room();
     }
 
     res.render('room', {
         emotionList: emotionList,
         cardColor: cardColor,
-        roomNum: roomNum,
-        timestamp: room[roomNum].eventQueue.length,
-        cardState: room[roomNum].cardState
+        roomId: roomId,
+        timestamp: room[roomId].eventQueue.length,
+        cardState: room[roomId].cardState
     });
 });
 
 
 
-app.listen(4000, () => console.log('server is running'));
+app.listen(80, () => console.log('server is running'));
