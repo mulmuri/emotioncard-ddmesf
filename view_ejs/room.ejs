@@ -99,14 +99,7 @@
 <body>
     <div class="card">
         <div class="card-body">
-            <% for (var i=1; i<=5; i++) { %>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="inlineRadioOptions" value="option1" onclick="checkRadio(<%= i %>)">
-                    <label class="form-check-label radio-color" for="inlineRadio1"></label>
-                </div>
-            <% } %>
-            <input class="username" type="text" placeholder="이름" size="16" maxlength="12" onkeyup="keyevent(this.value)">
-            <text class="radio-color resetButton" onclick="cardResetEvent()"></text>
+            
         </div>
     </div>
 
@@ -116,11 +109,11 @@
         <% for (var i=1; i<=55; i++) { %>
             <div class="flex-item" onclick="cardSelectAjaxEvent(<%=i%>)">
                 <div class="card-box">
-                    <svg viewBox="0 0 100 150" fill="<%=cardColor[i]%>">
+                    <svg viewBox="0 0 100 150" fill="<%=view.cardColor[i]%>">
                         <rect x="0" y="0" width="100%" height="100%" rx="5" ry="5"/>
                         <rect x="15" y="9" width="70%" height="20%" rx="10" ry="10" fill="white"/>
                     </svg>
-                    <div class="card-name"><%= emotionList[i] %></div>
+                    <div class="card-name"><%= view.emotionList[i] %></div>
                     <img class="card-emoticon" src="emoticonNo<%=i%>.png">
 
                     <svg class="stamp" viewBox="0 0 100 100" transform="rotate(-20)">
@@ -140,19 +133,42 @@
     </section>
 
     <script>
+    let I = "<%= JSON.stringify(I) %>";
+    I = I.replaceAll('&#34;', '\"');
+    I = JSON.parse(I);
 
-    function updateCard(cardNum, actionType, actionUser, username) {
-        var target = document.getElementsByClassName('stamp')[cardNum-1];
-        target.style.visibility = (actionType == 1) ? "visible" : "hidden";
-        target.childNodes[1].style.stroke = userColor[actionUser];
-        target.childNodes[3].style.fill = userColor[actionUser];
-        target.childNodes[3].innerHTML = username;
+    let view = "<%= JSON.stringify(view) %>";
+    view = view.replaceAll('&#34;', '\"');
+    view = JSON.parse(view);
+
+    var card = "<%= JSON.stringify(card) %>";
+    card = card.replaceAll('&#34;', '\"');
+    card = JSON.parse(card);
+
+    var user = "<%= JSON.stringify(user) %>";
+    user = user.replaceAll('&#34;', '\"');
+    user = JSON.parse(user);
+
+    console.log(I) ;
+    console.log(view);
+    console.log(user);
+
+    const roomId = String(<%= roomId %>);
+
+
+
+    function updateCard(num, type, name, color) {
+        var target = document.getElementsByClassName('stamp')[num-1];
+        target.style.visibility = (type == 1) ? "visible" : "hidden";
+        target.childNodes[1].style.stroke = color;
+        target.childNodes[3].style.fill = color;
+        target.childNodes[3].innerHTML = name;
     };
 
-    function syncAjaxEvent(timestamp) {
+    function syncAjaxEvent(curTime) {
         var data = {
-            'roomId': roomId,
-            'timestamp': timestamp
+            'lastTime': curTime,
+            'roomId': roomId
         };
         data = JSON.stringify(data);
 
@@ -163,27 +179,19 @@
 
         xhr.addEventListener('load', function() {
             var res = JSON.parse(xhr.responseText);
+            console.log(res);
             for (var item of res.updateList)
-                updateCard(item.cardNum, item.actionType, item.actionUser, item.username);
-            syncAjaxEvent(res.timestamp);
+                updateCard(item.num, item.type, item.name, item.color);
+            syncAjaxEvent(res.curTime);
         });
     };
 
-    function cardSelectAjaxEvent(cardNum) {
-        if (actionUser == undefined) {
-            alert("색을 선택해주세요.");
-            return;
-        }
-        if (username == undefined || username == '') {
-            alert("이름을 입력해주세요.");
-            return;
-        }
+    function cardSelectAjaxEvent(num) {
 
         var data = {
             "roomId": roomId,
-            "cardNum": cardNum,
-            "actionUser": actionUser,
-            "username": username
+            "num": num,
+            "sid": I.sid
         };
         data = JSON.stringify(data);
 
@@ -194,9 +202,11 @@
 
         xhr.addEventListener('load', function() {
             var res = JSON.parse(xhr.responseText);
-            if (res.operate == true)
-                updateCard(cardNum, res.actionType, actionUser, username);
-        });
+            console.log(res)
+            if (res.operation == true)
+                updateCard(num, res.type, I.name, I.color);
+            });
+
     };
 
     function cardResetEvent() {
@@ -210,40 +220,19 @@
         xhr.setRequestHeader('Content-type', "application/json");
         xhr.send(data);
     }
-
     </script>
 
+
+
     <script>
-    var roomId = <%= roomId %> ;
-
-    var colorLable = ["%F0%9F%9F%A5", "%F0%9F%9F%A7", "%F0%9F%9F%A8", "%F0%9F%9F%A9", "%F0%9F%9F%A6", "%F0%9F%94%84"];
-    for (var i=0; i<=5; i++)
-        document.getElementsByClassName('radio-color')[i].innerHTML = decodeURI(colorLable[i]);
-
-    var userColor = [null, "red", 'orange', 'yellow', 'green', 'blue'];
-
-    var cardState = "<%= JSON.stringify(cardState) %>";
-    cardState = cardState.replaceAll('&#34;', '\"');
-    cardState = JSON.parse(cardState);
-
     for (var i=1; i<=55; i++) {
-        if (cardState[i].cardType == 1) {
-            updateCard(i, 1, cardState[i].cardOwner, cardState[i].username);
+        if (card.state[i].type != 0) {
+            updateCard(i, card.state[i].type, card.state[i].name, card.state[i].color);
         }
     }
 
-    var actionUser;
-    function checkRadio(idx) {
-        actionUser = idx;
-    }
-
-    var username;
-    function keyevent(name) {
-        username = name;
-    }
-
     document.addEventListener('DOMContentLoaded', () => {
-        syncAjaxEvent(<%= timestamp %>);
+        syncAjaxEvent(<%= card.curTime %>);
     });
     </script>
 

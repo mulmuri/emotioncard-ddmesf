@@ -105,9 +105,107 @@ button:hover {
 <body>
     <div class="backgroundImage">
         <div class="container">
-            <button class="btn-1">감정카드 설명</button>
-            <button class="btn-2">방 만들기</button>
-            <button class="btn-3">방 입장하기</button>
+            <button type="button" data-bs-toggle="modal" data-bs-target="#modal-btn1" class="btn-1">감정카드 설명</button>
+            <button type="button" data-bs-toggle="modal" data-bs-target="#modal-btn2" class="btn-2">방 만들기</button>
+            <button type="button" data-bs-toggle="modal" data-bs-target="#modal-btn3" class="btn-3">방 입장하기</button>
+
+            <div class="modal fade" id="modal-btn1" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">감정카드 설명</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          ...
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <form method="post" action="/makeRoom" onsubmit="return true">
+                <div class="modal fade" id="modal-btn2" tabindex="-1" aria-labelledby="makeRoom-label" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="makeRoom-label">방 만들기</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-floating mb-3">
+                                    <input type="text" name="title" class="form-control" id="makeRoom-floatingName" placeholder="이름">
+                                    <label for="makeRoom-floatingID">방 소개</label>
+                                </div>
+                                <div class="form-floating mb-3">
+                                    <input type="text" name="name" class="form-control" id="makeRoom-floatingName" placeholder="이름">
+                                    <label for="makeRoom-floatingID">이름</label>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary">방 만들기</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <form method="post" action="/enterRoom" onsubmit="return true">
+                <div class="modal fade" id="modal-btn3" tabindex="-1" aria-labelledby="enterRoom-label" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="enterRoom-label">방 입장하기</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-floating mb-3">
+                                    <input type="text" name="roomId" class="form-control" id="enterRoom-floatingID" placeholder="입장코드">
+                                    <label for="enterRoom-floatingID">입장코드</label>
+                                </div>
+                                <div class="form-floating mb-3">
+                                    <input type="text" name="name" class="form-control" id="enterRoom-floatingName" placeholder="이름">
+                                    <label for="enterRoom-floatingID">이름</label>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary" >입장하기</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+
+
+            <form id="loginField" name="loginField" method="post" action="/user_info" onsubmit="return checkForm()">
+                <div class="modal fade" id="exampleModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLabel">방 만들기</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-floating mb-3">
+                                    <input type="text" name="roomNo" class="form-control" id="floatingID" placeholder="00000000">
+                                    <label for="floatingID"></label>
+                                </div>
+                                <div class="form-floating mb-3">
+                                    <input type="text" name="name" id="name" class="form-control" id="floatingName" placeholder="이름">
+                                    <label for="floatingID">이름</label>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                                <button type="submit" class="btn btn-dark" name="test" >등록</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 </body>
