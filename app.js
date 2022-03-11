@@ -11,21 +11,87 @@ app.use(express.static('emoticon'));
 
 
 Util = {
-    generateRandomString : function(length) {
-        const str ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    getRandomString : function(length) {
+        const str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
         let result = '';
         for (var i=0; i<length; i++) result += str[Math.floor(Math.random()*str.length)]
         return result;
     },
 
-    generateRandomNumber : function(length) {
-        const str ='0123456789';
+    getRandomNumber : function(length) {
+        const str = '0123456789';
         let result = '';
         for (var i=0; i<length; i++) result += str[Math.floor(Math.random()*str.length)]
         return result;
+    },
+
+    getRandomColor : function() {
+        const arr = [
+            "#0d6efd",
+            "#6610f2",
+            "#6610f2",
+            "#d63384",
+            "#dc3545",
+            "#fd7e14",
+            "#ffc107",
+            "#198754",
+            "#20c997",
+            "#0dcaf0",
+            "#adb5bd"            
+        ];
+        return arr[Math.floor(Math.random()*arr.length)];
+    },
+
+    getLightColor : function() {
+        var R = Math.floor(Math.random() * 8 + 8).toString(16) + Math.floor(Math.random() * 16).toString(16);
+        var G = Math.floor(Math.random() * 8 + 8).toString(16) + Math.floor(Math.random() * 16).toString(16);
+        var B = Math.floor(Math.random() * 8 + 8).toString(16) + Math.floor(Math.random() * 16).toString(16);
+
+        return color = '#'+R+G+B;
     }
+
 }
 
+
+/*
+class User {
+
+    list = new Map();
+    nameList = new Map();
+    activeList = [];
+
+    addUser(name) {
+        if (this.nameList.get(name) != undefined)
+            return this.nameList.get(name);
+
+        var sid = Util.getRandomString(6);
+        var color = Util.getRandomColor();
+        this.nameList.set(name, sid);
+        this.activeList.push({
+            name: name,
+            color: color
+        });
+        this.list.set(sid, {
+            name: name,
+            color: color,
+            online: 1,
+            own_card: [],
+            timer : setTimeout(function() {
+                
+            }, 3000)
+        });
+
+        return sid;
+    }
+
+    deleteUser(sid) {
+        let name = this.list.get(sid).name;
+        this.list.delete(sid);
+        this.nameList.delete(name);
+
+    }
+}
+*/
 
 
 class Room {
@@ -33,7 +99,10 @@ class Room {
     roomId;
 
     view = {
-        emotionList: [null, "감동적인", "감사한", "기대되는", "기쁜", "놀라운", "든든한", "만족스러운", "사랑스러운", "신나는", "열중한", "자랑스러운", "자신 있는", "재미 있는", "편안한", "평화로운", "홀가분한", "활기찬", "황홀한", "걱정스러운", "긴장한", "깜짝 놀란", "당황한", "두려운", "무서운", "불안한", "혼란스러운", "시무룩한", "웃픈", "답답한", "미운", "분한", "억울한", "짜증나는", "귀찮은", "무관심한", "부끄러운", "부러운", "싸늘한", "지루한", "피곤한", "괴로운", "그리운", "막막한", "미안한", "서운한", "슬픈", "실망스러운", "안타까운", "외로운", "우울한", "좌절한", "후회스러운", "궁금한", "위축되는", "서러운"],
+        emotionList: [null,
+            "감동적인", "감사한", "기대되는", "기쁜", "놀라운", "든든한", "만족스러운", "사랑스러운", "신나는", "열중한", "자랑스러운", "자신 있는", "재미 있는", "편안한", "평화로운", "홀가분한", "활기찬", "황홀한",
+            "걱정스러운", "긴장한", "깜짝 놀란", "당황한", "두려운", "무서운", "불안한", "혼란스러운", "시무룩한", "웃픈", "답답한", "미운", "분한", "억울한", "짜증나는", "귀찮은", "무관심한", "부끄러운", "부러운", "싸늘한", "지루한", "피곤한", "괴로운", "그리운", "막막한", "미안한", "서운한", "슬픈", "실망스러운", "안타까운", "외로운", "우울한", "좌절한", "후회스러운", "궁금한", "위축되는", "서러운"
+        ],
         cardColor: [],
         title: ""
     };
@@ -45,6 +114,7 @@ class Room {
         getCurTime: () => {return this.card.queue.length}
     };
 
+    
     user = {
         list : new Map(),
         nameList : new Map(),
@@ -53,8 +123,8 @@ class Room {
             if (this.nameList.get(name) != undefined)
                 return this.nameList.get(name);
 
-            var sid = Util.generateRandomString(6);
-            var color = "black";
+            var sid = Util.getRandomString(6);
+            var color = Util.getRandomColor();
             this.nameList.set(name, sid);
             this.activeList.push({
                 name: name,
@@ -72,15 +142,13 @@ class Room {
     }
 
 
+
     constructor(roomId, title) {
         this.roomId = roomId;
         this.view.title = title;
 
         for (var i=1; i<=55; i++) {
-            var R = Math.floor(Math.random() * 8 + 8).toString(16) + Math.floor(Math.random() * 16).toString(16);
-            var G = Math.floor(Math.random() * 8 + 8).toString(16) + Math.floor(Math.random() * 16).toString(16);
-            var B = Math.floor(Math.random() * 8 + 8).toString(16) + Math.floor(Math.random() * 16).toString(16);
-            this.view.cardColor[i] = '#'+R+G+B;
+            this.view.cardColor[i] = Util.getLightColor();
         };
 
         for (var i=1; i<=55; i++) this.card.state[i] = {
@@ -183,9 +251,9 @@ app.post('/cardResetRequest', function(req, res) {
 
 
 app.post('/makeRoom', function(req, res) {
-    var roomId = Util.generateRandomNumber(6);
+    var roomId = Util.getRandomNumber(4);
+    while (room.get(roomId) === null) roomId = Util.getRandomNumber(4);
     var title = req.body.title;
-    while (room.get(roomId) === null) roomId = Util.generateRandomNumber(6);
 
     room.set(roomId, new Room(roomId, title));
     var sid = room.get(roomId).user.addUser(req.body.name);
