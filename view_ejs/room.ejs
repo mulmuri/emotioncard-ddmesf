@@ -7,6 +7,8 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poiret+One&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/33a5e70f2d.js" crossorigin="anonymous"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=0.55">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -165,12 +167,24 @@
         white-space: nowrap;
     }
     .align-layer {
-        display: table-cell;
-        text-align: center;
-        vertical-align: middle;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: left;
     }
     .align-content {
-        display: inline-block;
+        text-align: center;
+    }
+
+    .reset-button {
+        width: 60px;
+        height: 60px;
+        border-radius: 5px;
+        margin-left: 10px;
+    }
+    .reset-button:hover {
+        background-color: #D3D3D3;
+        cursor: pointer;
     }
 
     </style>
@@ -178,22 +192,20 @@
 </head>
     <section class="main-header">
         <div class="header-bar">
-            <div class="align-layer ">
+            <div class="align-layer">
                 <h1 class="align-content"> #<%= roomId %></h1>
                 <h2 class="align-content"> <%= view.title %></h2>
+                <div class="align-content site">
+                    <svg onclick="cardResetEvent()" class="reset-button text-primary"  xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0z" fill="none"/><path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/></svg>
+                </div>
             </div>
         </div>
 
         <div class="user-bar">
-            <div class="align-layer">
-                <% for (var i=0; i<user.length; i++) { %>
-                    <span class="align-content  badge rounded-pill" style="
-                        background-color: <%= user[i].color %>;
-                        font-size: 20px;
-                    "><%= user[i].name %></span>
-                <% } %> 
+            <div class="align-layer" id="userList">
             </div>
         </div>
+
     </section>
 
 
@@ -238,11 +250,31 @@
         target.childNodes[3].innerHTML = name;
     };
 
+    function updateUser(updateList) {
+        console.log(updateList);
+        var target = document.getElementById('userList');
+        while (target.hasChildNodes()) target.removeChild(target.lastChild);
+
+        for (var i=0; i<updateList.length; i++) {
+            target.insertAdjacentHTML(
+                'beforeend',`
+                <span class="align-content  badge rounded-pill" style="
+                   background-color: ${updateList[i].color};
+                   font-size: 20px;
+               ">${updateList[i].name}</span>
+            `);
+        }
+        
+    };
+
     function syncAjaxEvent(curTime) {
         var data = {
             'lastTime': curTime,
-            'roomId': roomId
+            'roomId': roomId,
+            'sid': I.sid,
+            'name': I.name
         };
+        console.log(data);
         data = JSON.stringify(data);
 
         var xhr = new XMLHttpRequest();
@@ -252,7 +284,8 @@
 
         xhr.addEventListener('load', function() {
             var res = JSON.parse(xhr.responseText);
-            console.log(res);
+            updateUser(res.userList);
+            console.log("res: ", res);
             for (var item of res.updateList)
                 updateCard(item.num, item.type, item.name, item.color);
             syncAjaxEvent(res.curTime);
@@ -293,6 +326,7 @@
         xhr.setRequestHeader('Content-type', "application/json");
         xhr.send(data);
     }
+
     </script>
 
 
@@ -303,6 +337,7 @@
             updateCard(i, card.state[i].type, card.state[i].name, card.state[i].color);
         }
     }
+    updateUser(user);
 
     document.addEventListener('DOMContentLoaded', () => {
         syncAjaxEvent(<%= card.curTime %>);

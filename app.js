@@ -53,15 +53,14 @@ Util = {
 }
 
 
-/*
-class User {
-
+class User  {
     list = new Map();
     nameList = new Map();
     activeList = [];
+    lifecycle = new Map();
 
     addUser(name) {
-        if (this.nameList.get(name) != undefined)
+        if (this.nameList.get(name) !== undefined)
             return this.nameList.get(name);
 
         var sid = Util.getRandomString(6);
@@ -75,24 +74,31 @@ class User {
             name: name,
             color: color,
             online: 1,
-            own_card: [],
-            timer : setTimeout(function() {
-                
-            }, 3000)
+            ownCard: []
         });
 
+        this.resetLifeCycle(sid);
+            
         return sid;
-    }
+    };
 
-    deleteUser(sid) {
-        let name = this.list.get(sid).name;
-        this.list.delete(sid);
-        this.nameList.delete(name);
+    deleteUser(sid, user) {
+        if (user.list.get(sid) === undefined) return;
 
-    }
+        var name = user.list.get(sid).name;
+        user.nameList.delete(name);
+        user.activeList = user.activeList.filter(elm => elm.name != name);
+        user.list.delete(sid);
+        user.lifecycle.delete(sid);
+
+    };
+
+    resetLifeCycle(sid) {
+        let timer = setTimeout(this.deleteUser, 12000, sid, this);
+        this.lifecycle.set(sid, timer);
+    };
+
 }
-*/
-
 
 class Room {
 
@@ -114,32 +120,7 @@ class Room {
         getCurTime: () => {return this.card.queue.length}
     };
 
-    
-    user = {
-        list : new Map(),
-        nameList : new Map(),
-        activeList : [],
-        addUser : function(name) {
-            if (this.nameList.get(name) != undefined)
-                return this.nameList.get(name);
-
-            var sid = Util.getRandomString(6);
-            var color = Util.getRandomColor();
-            this.nameList.set(name, sid);
-            this.activeList.push({
-                name: name,
-                color: color
-            });
-            this.list.set(sid, {
-                name: name,
-                color: color,
-                online: 1,
-                own_card: []
-            });
-
-            return sid;
-        }
-    }
+    user = new User();
 
 
 
@@ -156,25 +137,37 @@ class Room {
             owner: null,
             color: null
         };
-    }
+    };
 
 
-    syncCallback(req, res, lastTime, roomId, count) {
-        var curTime = room.get(roomId).card.getCurTime();
+    syncCallback(req, res, myRoom, sid, lastTime, count) {
+        var curTime = myRoom.card.getCurTime();
+
         if (curTime != lastTime || count == 0) {
+            clearTimeout(myRoom.user.lifecycle.get(sid));
+            myRoom.user.resetLifeCycle(sid);
+            req.body.userList = myRoom.user.activeList;
+
             var updateList = new Array(curTime - lastTime);
             for (var i=0; i< updateList.length; i++)
-                updateList[i] = room.get(roomId).card.queue[i+lastTime];
+                updateList[i] = myRoom.card.queue[i+lastTime];
 
             req.body.curTime = curTime;
             req.body.updateList = updateList;
             res.send(req.body);
         } else {
-            setTimeout(room.get(roomId).syncCallback, 100, req, res, lastTime, roomId, count-1);
+            setTimeout(myRoom.syncCallback, 100, req, res, myRoom, sid, lastTime, count-1);
         }
-    }
+    };
+
+    clearDeletedCard(own_card) {
+
+    };
+
 
     selectCard(num, sid) {
+        if (this.user.list.get(sid) === undefined) return 0;
+
         if (this.card.state[num].type != 1) {
             this.card.state[num] = {
                 owner: sid,
@@ -205,6 +198,7 @@ class Room {
         }
     };
 
+
     resetCard() {
         for (var i=1; i<=55; i++) {
             if (this.card.state[i].type == 1) {
@@ -226,7 +220,11 @@ class Room {
 let room = new Map();
 
 app.post('/syncRequest', function(req, res) {
-    room.get(req.body.roomId).syncCallback(req, res, req.body.lastTime, req.body.roomId, 250);
+    let myRoom = room.get(req.body.roomId);
+    if (myRoom.user.list.get(sid) === undefined) {
+        myRoom.user.addUser(req.body.name);
+    }
+    myRoom.syncCallback(req, res, myRoom, req.body.sid, req.body.lastTime, 40);
 });
 
 app.post('/selectCardRequest', function(req, res) {
@@ -251,23 +249,27 @@ app.post('/cardResetRequest', function(req, res) {
 
 
 app.post('/makeRoom', function(req, res) {
+
     var roomId = Util.getRandomNumber(4);
     while (room.get(roomId) === null) roomId = Util.getRandomNumber(4);
     var title = req.body.title;
 
-    room.set(roomId, new Room(roomId, title));
-    var sid = room.get(roomId).user.addUser(req.body.name);
+    var myRoom = new Room(roomId, title)
+
+    room.set(roomId, myRoom);
+    var sid = myRoom.user.addUser(req.body.name);
 
     res.redirect(`room?id=${roomId}&sid=${sid}`);
 });
 
 app.post('/enterRoom', function(req, res) {
     var roomId = req.body.roomId;
-    if (room.get(roomId) === undefined) {
+    var myRoom = room.get(roomId);
+    if (myRoom === undefined) {
         res.redirect('main');
     }
 
-    var sid = room.get(roomId).user.addUser(req.body.name);
+    var sid = myRoom.user.addUser(req.body.name);
 
     res.redirect(`room?id=${roomId}&sid=${sid}`);
 });
@@ -309,7 +311,6 @@ app.get('/room', function(req, res) {
         });
     }
 });
-
 
 
 app.listen(3000, () => console.log('server is running'));
