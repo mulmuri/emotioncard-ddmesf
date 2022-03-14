@@ -30,11 +30,13 @@
     user = user.replaceAll('&#34;', '\"');
     user = JSON.parse(user);
 
-    console.log(I) ;
-    console.log(view);
-    console.log(user);
+    console.log("I: ", I) ;
+    console.log("view: ", view);
+    console.log("user: ", user);
 
     const roomId = String(<%= roomId %>);
+
+    let readytoload = false;
 
     </script>
 
@@ -251,16 +253,16 @@
     };
 
     function updateUser(updateList) {
-        console.log(updateList);
         var target = document.getElementById('userList');
         while (target.hasChildNodes()) target.removeChild(target.lastChild);
 
         for (var i=0; i<updateList.length; i++) {
             target.insertAdjacentHTML(
                 'beforeend',`
-                <span class="align-content  badge rounded-pill" style="
+                <span class="align-content badge rounded-pill" style="
                    background-color: ${updateList[i].color};
                    font-size: 20px;
+                   margin-left: 7px;
                ">${updateList[i].name}</span>
             `);
         }
@@ -274,7 +276,7 @@
             'sid': I.sid,
             'name': I.name
         };
-        console.log(data);
+        console.log("syn_req: ", data);
         data = JSON.stringify(data);
 
         var xhr = new XMLHttpRequest();
@@ -285,7 +287,7 @@
         xhr.addEventListener('load', function() {
             var res = JSON.parse(xhr.responseText);
             updateUser(res.userList);
-            console.log("res: ", res);
+            console.log("syn_res: ", res);
             for (var item of res.updateList)
                 updateCard(item.num, item.type, item.name, item.color);
             syncAjaxEvent(res.curTime);
@@ -293,6 +295,7 @@
     };
 
     function cardSelectAjaxEvent(num) {
+        if (readytoload == false) return;
 
         var data = {
             "roomId": roomId,
@@ -308,7 +311,6 @@
 
         xhr.addEventListener('load', function() {
             var res = JSON.parse(xhr.responseText);
-            console.log(res)
             if (res.operation == true)
                 updateCard(num, res.type, I.name, I.color);
             });
@@ -341,6 +343,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         syncAjaxEvent(<%= card.curTime %>);
+        readytoload = true
     });
     </script>
 

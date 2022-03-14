@@ -54,10 +54,17 @@ Util = {
 
 
 class User  {
+
+    roomId;
+
     list = new Map();
     nameList = new Map();
     activeList = [];
     lifecycle = new Map();
+
+    constructor(num) {
+        this.roomId = num;
+    }
 
     addUser(name) {
         if (this.nameList.get(name) !== undefined)
@@ -82,7 +89,7 @@ class User  {
         return sid;
     };
 
-    deleteUser(sid, user) {
+    deleteUser(sid, user, roomId) {
         if (user.list.get(sid) === undefined) return;
 
         var name = user.list.get(sid).name;
@@ -91,10 +98,15 @@ class User  {
         user.list.delete(sid);
         user.lifecycle.delete(sid);
 
+    console.log(`
+    ** user leaved **
+    room : ${room.get(roomId).view.title}
+    user : ${name}`)
+
     };
 
     resetLifeCycle(sid) {
-        let timer = setTimeout(this.deleteUser, 12000, sid, this);
+        let timer = setTimeout(this.deleteUser, 6000, sid, this, this.roomId);
         this.lifecycle.set(sid, timer);
     };
 
@@ -120,9 +132,7 @@ class Room {
         getCurTime: () => {return this.card.queue.length}
     };
 
-    user = new User();
-
-
+    user;
 
     constructor(roomId, title) {
         this.roomId = roomId;
@@ -137,6 +147,13 @@ class Room {
             owner: null,
             color: null
         };
+
+        this.user = new User(roomId);
+
+    console.log(`
+    ** room generated **
+    room : ${title}`)
+
     };
 
 
@@ -160,13 +177,10 @@ class Room {
         }
     };
 
-    clearDeletedCard(own_card) {
-
-    };
-
-
     selectCard(num, sid) {
         if (this.user.list.get(sid) === undefined) return 0;
+
+        var ret;
 
         if (this.card.state[num].type != 1) {
             this.card.state[num] = {
@@ -181,7 +195,7 @@ class Room {
                 name: this.user.list.get(sid).name,
                 color: this.user.list.get(sid).color
             });
-            return 1;
+            ret = 1;
 
         } else if (this.card.state[num].type == 1 && this.card.state[num].owner == sid) {
             this.card.state[num].type = 0;
@@ -191,11 +205,20 @@ class Room {
                 name: null,
                 color: null
             });
-            return -1;
+            ret = -1;
 
         } else {
-            return 0;
+            ret = 0;
         }
+
+    console.log(`
+    ** card select request **
+    room : ${room.get(this.roomId).view.title}
+    user : ${this.user.list.get(sid).name}
+    card num : ${num}
+    card type : ${ret}`)
+
+        return ret;
     };
 
 
@@ -221,6 +244,7 @@ let room = new Map();
 
 app.post('/syncRequest', function(req, res) {
     let myRoom = room.get(req.body.roomId);
+    let sid = req.body.sid;
     if (myRoom.user.list.get(sid) === undefined) {
         myRoom.user.addUser(req.body.name);
     }
@@ -240,11 +264,19 @@ app.post('/selectCardRequest', function(req, res) {
         req.body.operation = false;
     }
 
+    
+
     res.send(req.body);
 });
 
 app.post('/cardResetRequest', function(req, res) {
-    room.get(req.body.roomId).resetCard();
+    var roomId = req.body.roomId;
+
+    console.log(`
+    ** card reset request **
+    room : ${room.get(roomId).view.title}`)
+
+    room.get(roomId).resetCard();
 });
 
 
@@ -257,7 +289,13 @@ app.post('/makeRoom', function(req, res) {
     var myRoom = new Room(roomId, title)
 
     room.set(roomId, myRoom);
-    var sid = myRoom.user.addUser(req.body.name);
+    var name = req.body.name;
+    var sid = myRoom.user.addUser(name);
+
+    console.log(`
+    ** user entered **
+    room : ${title}
+    user : ${name}`)
 
     res.redirect(`room?id=${roomId}&sid=${sid}`);
 });
@@ -265,13 +303,22 @@ app.post('/makeRoom', function(req, res) {
 app.post('/enterRoom', function(req, res) {
     var roomId = req.body.roomId;
     var myRoom = room.get(roomId);
+
     if (myRoom === undefined) {
         res.redirect('main');
+    } else {
+        var name = req.body.name;
+        var sid = myRoom.user.addUser(name);
+
+    console.log(`
+    user entered
+    room : ${room.get(roomId).view.title}
+    user : ${name}`)
+
+        res.redirect(`room?id=${roomId}&sid=${sid}`);
     }
 
-    var sid = myRoom.user.addUser(req.body.name);
 
-    res.redirect(`room?id=${roomId}&sid=${sid}`);
 });
 
 
@@ -313,4 +360,4 @@ app.get('/room', function(req, res) {
 });
 
 
-app.listen(3000, () => console.log('server is running'));
+app.listen(3000, () => console.log('    server started\n'));
