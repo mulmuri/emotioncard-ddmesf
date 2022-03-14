@@ -151,6 +151,7 @@ class Room {
         this.user = new User(roomId);
 
     console.log(`
+
     ** room generated **
     room : ${title}`)
 
@@ -311,7 +312,7 @@ app.post('/enterRoom', function(req, res) {
         var sid = myRoom.user.addUser(name);
 
     console.log(`
-    user entered
+    ** user entered **
     room : ${room.get(roomId).view.title}
     user : ${name}`)
 
